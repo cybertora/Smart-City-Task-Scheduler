@@ -2,7 +2,8 @@ package graph;
 
 import graph.scc.TarjanSCC;
 import org.junit.jupiter.api.Test;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TarjanSCCTest {
@@ -13,10 +14,18 @@ public class TarjanSCCTest {
         TarjanSCC scc = new TarjanSCC(g);
         List<List<Integer>> components = scc.findSCCs();
 
-        assertEquals(3, components.size(), "Должно быть 3 SCC");
-        assertTrue(components.stream().anyMatch(c -> c.contains(1) && c.contains(2) && c.contains(3)));
-        assertTrue(components.stream().anyMatch(c -> c.size() == 1 && c.contains(0)));
-        assertTrue(components.stream().anyMatch(c -> c.size() == 4 && c.contains(4)));
+        List<List<Integer>> normalized = components.stream()
+                .map(list -> list.stream().sorted().collect(Collectors.toList()))
+                .sorted((a, b) -> Integer.compare(a.get(0), b.get(0)))
+                .collect(Collectors.toList());
+
+        List<List<Integer>> expected = List.of(
+                List.of(0),
+                List.of(1, 2, 3),
+                List.of(4, 5, 6, 7)
+        );
+
+        assertEquals(expected, normalized, "SCC не совпадают по содержимому");
     }
 
     @Test
@@ -32,6 +41,7 @@ public class TarjanSCCTest {
         Graph g = TestUtils.loadGraph("tasks_02.json");
         TarjanSCC scc = new TarjanSCC(g);
         List<List<Integer>> components = scc.findSCCs();
-        assertEquals(g.n, components.size(), "В DAG — по 1 вершине в SCC");
+        assertEquals(g.n, components.size());
+        components.forEach(c -> assertEquals(1, c.size()));
     }
 }
