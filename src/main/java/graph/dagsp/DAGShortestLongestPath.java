@@ -7,7 +7,8 @@ public class DAGShortestLongestPath {
     private final Graph dag;
     private final List<Integer> topoOrder;
     private final long[] distShort, distLong;
-    private final int[] prevShort, prevLong;
+    public final int[] prevShort;
+    private final int[] prevLong;
     private int relaxCount = 0;
 
     public DAGShortestLongestPath(Graph dag, List<Integer> topoOrder) {

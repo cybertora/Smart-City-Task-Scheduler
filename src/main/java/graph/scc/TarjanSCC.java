@@ -5,57 +5,61 @@ import java.util.*;
 
 public class TarjanSCC {
     private final Graph g;
-    private final int[] disc, low, stackMember, st;
-    private final List<List<Integer>> scc;
-    private final Deque<Integer> stack;
     private int time = 0;
-    private int popCount = 0, pushCount = 0;
+    public int pushCount = 0;
+    public int popCount = 0;
 
     public TarjanSCC(Graph g) {
         this.g = g;
-        this.disc = new int[g.n]; this.low = new int[g.n];
-        this.stackMember = new int[g.n];
-        this.st = new int[g.n];
-        this.scc = new ArrayList<>();
-        this.stack = new ArrayDeque<>();
-        Arrays.fill(disc, -1);
     }
 
     public List<List<Integer>> findSCCs() {
+        List<List<Integer>> sccs = new ArrayList<>();
+        int[] disc = new int[g.n];
+        int[] low = new int[g.n];
+        boolean[] onStack = new boolean[g.n];
+        Deque<Integer> stack = new ArrayDeque<>();
+        Arrays.fill(disc, -1);
+
         for (int i = 0; i < g.n; i++) {
-            if (disc[i] == -1) tarjanDFS(i);
+            if (disc[i] == -1) {
+                dfs(i, disc, low, onStack, stack, sccs);
+            }
         }
-        return scc;
+
+        // Нормализация: сортировка внутри и по первой вершине
+        sccs.forEach(comp -> comp.sort(Integer::compareTo));
+        sccs.sort((a, b) -> Integer.compare(a.get(0), b.get(0)));
+        return sccs;
     }
 
-    private void tarjanDFS(int u) {
+    private void dfs(int u, int[] disc, int[] low, boolean[] onStack, Deque<Integer> stack, List<List<Integer>> sccs) {
         disc[u] = low[u] = time++;
-        stack.push(u); pushCount++;
-        stackMember[u] = 1;
-        st[u] = 1;
+        stack.push(u);
+        onStack[u] = true;
+        pushCount++;
 
         for (Graph.Edge e : g.adj.get(u)) {
             int v = e.to;
             if (disc[v] == -1) {
-                tarjanDFS(v);
+                dfs(v, disc, low, onStack, stack, sccs);
                 low[u] = Math.min(low[u], low[v]);
-            } else if (stackMember[v] == 1) {
+            } else if (onStack[v]) {
                 low[u] = Math.min(low[u], disc[v]);
             }
         }
 
+        // Если u — корень SCC
         if (low[u] == disc[u]) {
             List<Integer> component = new ArrayList<>();
             while (true) {
-                int v = stack.pop(); popCount++;
-                stackMember[v] = 0;
+                int v = stack.pop();
+                onStack[v] = false;
+                popCount++;
                 component.add(v);
                 if (v == u) break;
             }
-            scc.add(component);
+            sccs.add(component);
         }
     }
-
-    public int getPopCount() { return popCount; }
-    public int getPushCount() { return pushCount; }
 }
